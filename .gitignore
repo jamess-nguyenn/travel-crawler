@@ -16,6 +16,10 @@
 coverage.*
 *.coverprofile
 profile.cov
+go.sum
+*.txt
+*.log
+__debug*
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

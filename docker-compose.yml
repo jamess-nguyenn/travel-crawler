@@ -1,0 +1,83 @@
+services:
+  golang:
+    build:
+      context: .
+      dockerfile: docker/golang/Dockerfile
+    container_name: golang
+    volumes:
+      - .:/app
+      - go-mod-cache:/go/pkg/mod
+    ports:
+      - "8000:8000"
+      - "2345:2345"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    command: ["tail", "-f", "/dev/null"]
+
+  mysql:
+    image: mysql:9.7
+    container_name: mysql
+    restart: unless-stopped
+    env_file:
+      - docker/mysql/.env
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: unless-stopped
+    env_file:
+      - docker/redis/.env
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    command: >
+      sh -c 'redis-server
+      --appendonly yes
+      --requirepass "$$REDIS_PASSWORD"'
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight-data:/data
+    depends_on:
+      - redis
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    restart: unless-stopped
+    env_file:
+      - docker/kafka/.env
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    ports:
+      - "9092:9092"
+
+  kafkaui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafkaui
+    restart: unless-stopped
+    env_file:
+      - docker/kafkaui/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+
+volumes:
+  go-mod-cache:
+  mysql-data:
+  redis-data:
+  redisinsight-data:
+  kafka-data:
