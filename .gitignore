@@ -23,6 +23,7 @@ __debug*
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+logs/
 
 # Go workspace file
 go.work
