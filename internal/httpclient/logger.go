@@ -23,6 +23,7 @@ func RegisterLogger(
 			"path", r.PathParams,
 			"form", r.FormData,
 			"body", r.Body,
+			"header", r.Header,
 			"status_code", resp.StatusCode(),
 			"duration", resp.Time().String(),
 		)

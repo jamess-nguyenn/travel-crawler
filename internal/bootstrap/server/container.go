@@ -6,6 +6,7 @@ import (
 	"travel-crawler/internal/auth0"
 	"travel-crawler/internal/config"
 	"travel-crawler/internal/database"
+	"travel-crawler/internal/redis"
 	"travel-crawler/internal/user"
 )
 
@@ -22,6 +23,7 @@ type Container struct {
 func NewContainer(
 	db *gorm.DB,
 	cfg *config.Config,
+	cache *redis.Cache,
 	logger *zap.SugaredLogger,
 ) *Container {
 	return &Container{
@@ -29,7 +31,7 @@ func NewContainer(
 
 		userRepo: user.NewRepository(db),
 
-		auth0Client: auth0.New(cfg.Auth0, logger),
+		auth0Client: auth0.New(cfg.Auth0, cache, logger),
 
 		logger: logger,
 	}

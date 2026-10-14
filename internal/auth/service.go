@@ -88,8 +88,6 @@ func (s *service) Create(
 		}
 	}
 
-	now := helper.NowUTC()
-
 	if !req.EmailVerified {
 		userResp, err := s.auth0Client.GetUserByAuth0ID(ctx, req.Auth0ID)
 
@@ -114,6 +112,7 @@ func (s *service) Create(
 		}
 	}
 
+	now := helper.NowUTC()
 	passwordHash := helper.GeneratePassword(100)
 
 	userData := &user.User{
