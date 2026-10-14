@@ -9,6 +9,7 @@ import (
 	"travel-crawler/internal/config"
 	"travel-crawler/internal/constant"
 	"travel-crawler/internal/database"
+	"travel-crawler/internal/redis"
 	"travel-crawler/internal/router"
 )
 
@@ -50,9 +51,28 @@ func main() {
 		return
 	}
 
+	cache, err := redis.NewCache(cfg.Redis, cfg.App.Key)
+	if err != nil {
+		logger.Errorw(
+			"failed to connect redis",
+			"error", err,
+		)
+		return
+	}
+
+	defer func() {
+		if err := cache.Close(); err != nil {
+			logger.Warnw(
+				"failed to close cache",
+				"error", err,
+			)
+		}
+	}()
+
 	app := server.NewApp(
 		db,
 		cfg,
+		cache,
 		logger,
 	)
 

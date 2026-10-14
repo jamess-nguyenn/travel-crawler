@@ -5,7 +5,6 @@ import (
 	"github.com/joho/godotenv"
 	"net"
 	"strings"
-	"travel-crawler/internal/helper"
 )
 
 type App struct {
@@ -13,7 +12,7 @@ type App struct {
 	Key  string
 	Env  string `env:"ENV"`
 	Host string `env:"HOST"`
-	Port int    `env:"PORT"`
+	Port string `env:"PORT"`
 }
 
 func (a *App) Init() {
@@ -23,7 +22,7 @@ func (a *App) Init() {
 func (a *App) Address() string {
 	return net.JoinHostPort(
 		a.Host,
-		helper.ParseString(a.Port),
+		a.Port,
 	)
 }
 
@@ -43,7 +42,7 @@ type Auth0 struct {
 
 type MySQL struct {
 	Host     string `env:"HOST"`
-	Port     int    `env:"PORT"`
+	Port     string `env:"PORT"`
 	Username string `env:"USERNAME"`
 	Password string `env:"PASSWORD"`
 	Database string `env:"DATABASE"`
@@ -53,8 +52,17 @@ type MySQL struct {
 
 type Redis struct {
 	Host     string `env:"HOST"`
-	Port     int    `env:"PORT"`
+	Port     string `env:"PORT"`
+	Username string `env:"USERNAME"`
 	Password string `env:"PASSWORD"`
+	DB       int    `env:"DB"`
+}
+
+func (r *Redis) Address() string {
+	return net.JoinHostPort(
+		r.Host,
+		r.Port,
+	)
 }
 
 type Kafka struct {

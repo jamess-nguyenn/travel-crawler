@@ -3,29 +3,58 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"net/url"
+	"log"
+	"os"
+	"strings"
 	"time"
+	"travel-crawler/internal/helper"
 
 	"travel-crawler/internal/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func buildDsn(cfg config.MySQL) string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=%s",
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=%s",
 		cfg.Username,
 		cfg.Password,
 		cfg.Host,
 		cfg.Port,
 		cfg.Database,
-		url.QueryEscape(cfg.Timezone),
+		helper.EscapeQuery(cfg.Timezone),
 	)
 }
 
-func open(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+func parseLogLevel(level string) logger.LogLevel {
+	switch strings.ToLower(strings.TrimSpace(level)) {
+	case "silent":
+		return logger.Silent
+	case "error":
+		return logger.Error
+	case "warn", "warning":
+		return logger.Warn
+	case "info":
+		return logger.Info
+	default:
+		return logger.Error
+	}
+}
+
+func open(dsn string, logLevel logger.LogLevel) (*gorm.DB, error) {
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags),
+			logger.Config{
+				SlowThreshold:             30 * time.Second,
+				LogLevel:                  logLevel,
+				IgnoreRecordNotFoundError: true,
+				Colorful:                  false,
+			},
+		),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect mysql: %w", err)
 	}
@@ -59,8 +88,9 @@ func ping(sqlDB *sql.DB) error {
 
 func Connect(cfg config.MySQL) (*gorm.DB, error) {
 	dsn := buildDsn(cfg)
+	logLevel := parseLogLevel(cfg.LogLevel)
 
-	db, err := open(dsn)
+	db, err := open(dsn, logLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +116,7 @@ func Close(db *gorm.DB) error {
 		return err
 	}
 
-	if err = sqlDB.Close(); err != nil {
+	if err := sqlDB.Close(); err != nil {
 		return fmt.Errorf("failed to close mysql: %w", err)
 	}
 

@@ -37,10 +37,13 @@ services:
       - redis-data:/data
     ports:
       - "6379:6379"
-    command: >
-      sh -c 'redis-server
-      --appendonly yes
-      --requirepass "$$REDIS_PASSWORD"'
+    command:
+      - sh
+      - -c
+      - |
+        printf 'user default off\nuser %s on >%s ~* &* +@all\nappendonly yes\n' \
+          "$$REDIS_USERNAME" "$$REDIS_PASSWORD" > /tmp/redis.conf
+        exec redis-server /tmp/redis.conf
 
   redisinsight:
     image: redis/redisinsight:latest
