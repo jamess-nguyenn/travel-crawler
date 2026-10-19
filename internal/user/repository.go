@@ -26,6 +26,8 @@ func NewRepository(db *gorm.DB) UserRepository {
 	}
 }
 
+var _ UserRepository = (*repository)(nil)
+
 func (r *repository) GetByEmailOrAuth0ID(
 	ctx context.Context,
 	email string,

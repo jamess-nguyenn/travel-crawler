@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"net/http"
+	"travel-crawler/internal/accommodation"
 	"travel-crawler/internal/auth"
 	"travel-crawler/internal/bootstrap/server"
 	"travel-crawler/internal/middleware"
@@ -104,6 +105,30 @@ func New(
 		).
 		Methods(http.MethodGet).
 		Name("ListUser")
+
+	//Accommodations
+
+	apiAccommodation := protectedAPI.PathPrefix("/accommodations").Subrouter()
+
+	apiAccommodation.
+		HandleFunc(
+			"/{id:[0-9]+}",
+			accommodation.Get(
+				app.AccommodationService,
+			),
+		).
+		Methods(http.MethodGet).
+		Name("GetAccommodation")
+
+	apiAccommodation.
+		HandleFunc(
+			"",
+			accommodation.List(
+				app.AccommodationService,
+			),
+		).
+		Methods(http.MethodGet).
+		Name("ListAccommodation")
 
 	return router
 }
