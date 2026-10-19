@@ -36,12 +36,13 @@ type client struct {
 }
 
 func New(
+	http *httpclient.Client,
 	cfg config.Auth0,
 	cache *redis.Cache,
 	logger *zap.SugaredLogger,
 ) Client {
 	return &client{
-		http:   httpclient.New(logger),
+		http:   http,
 		config: cfg,
 		cache:  cache,
 		logger: logger,

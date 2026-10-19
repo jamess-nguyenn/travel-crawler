@@ -3,9 +3,11 @@ package server
 import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"travel-crawler/internal/accommodation"
 	"travel-crawler/internal/auth0"
 	"travel-crawler/internal/config"
 	"travel-crawler/internal/database"
+	"travel-crawler/internal/httpclient"
 	"travel-crawler/internal/redis"
 	"travel-crawler/internal/user"
 )
@@ -13,7 +15,8 @@ import (
 type Container struct {
 	txManager *database.TxManager
 
-	userRepo user.UserRepository
+	userRepo          user.UserRepository
+	accommodationRepo accommodation.AccommodationRepository
 
 	auth0Client auth0.Client
 
@@ -26,12 +29,15 @@ func NewContainer(
 	cache *redis.Cache,
 	logger *zap.SugaredLogger,
 ) *Container {
+	http := httpclient.New(logger)
+
 	return &Container{
 		txManager: database.NewTxManager(db),
 
-		userRepo: user.NewRepository(db),
+		userRepo:          user.NewRepository(db),
+		accommodationRepo: accommodation.NewRepository(db),
 
-		auth0Client: auth0.New(cfg.Auth0, cache, logger),
+		auth0Client: auth0.New(http, cfg.Auth0, cache, logger),
 
 		logger: logger,
 	}

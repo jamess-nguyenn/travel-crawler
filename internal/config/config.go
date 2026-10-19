@@ -69,13 +69,25 @@ type Kafka struct {
 	Brokers string `env:"BROKERS"`
 }
 
+type Nuitee struct {
+	BaseURL string `env:"BASE_URL"`
+	APIKey  string `env:"API_KEY"`
+}
+
 type Config struct {
-	App   App   `env-prefix:"APP_"`
-	Log   Log   `env-prefix:"LOG_"`
-	Auth0 Auth0 `env-prefix:"AUTH0_"`
-	MySQL MySQL `env-prefix:"DB_MYSQL_"`
-	Redis Redis `env-prefix:"REDIS_"`
-	Kafka Kafka `env-prefix:"KAFKA_"`
+	App                       App    `env-prefix:"APP_"`
+	Log                       Log    `env-prefix:"LOG_"`
+	Auth0                     Auth0  `env-prefix:"AUTH0_"`
+	MySQL                     MySQL  `env-prefix:"DB_MYSQL_"`
+	Redis                     Redis  `env-prefix:"REDIS_"`
+	Kafka                     Kafka  `env-prefix:"KAFKA_"`
+	Nuitee                    Nuitee `env-prefix:"NUITEE_"`
+	AccommodationProvidersKey string `env:"ACCOMMODATION_PROVIDERS"`
+	AccommodationProviders    []string
+}
+
+func (c *Config) Init() {
+	c.AccommodationProviders = strings.Split(strings.Trim(c.AccommodationProvidersKey, ","), ",")
 }
 
 func Load() (*Config, error) {
@@ -88,6 +100,7 @@ func Load() (*Config, error) {
 	}
 
 	cfg.App.Init()
+	cfg.Init()
 
 	return &cfg, nil
 }

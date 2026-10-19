@@ -4,6 +4,7 @@ const (
 	HeaderContentType   = "Content-Type"
 	HeaderAccept        = "Accept"
 	HeaderAuthorization = "Authorization"
+	HeaderAPIKey        = "X-API-Key"
 
 	ContentTypeJSON           = "application/json"
 	ContentTypeFormURLEncoded = "application/x-www-form-urlencoded"
