@@ -1,8 +1,5 @@
 package server
 
 type Module interface {
-	Init(
-		app *App,
-		ctr *Container,
-	)
+	Init(app *App, ctr *Container)
 }

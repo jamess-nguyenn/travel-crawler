@@ -15,6 +15,18 @@ func Chunk[T any](items []T, size int) [][]T {
 	return chunks
 }
 
+func Sample[T any](items []T, size int) []T {
+	if size <= 0 {
+		return []T{}
+	}
+
+	if size > len(items) {
+		size = len(items)
+	}
+
+	return items[:size]
+}
+
 func MapSlice[T any, R any](items []T, mapper func(T) R) []R {
 	result := make([]R, 0, len(items))
 

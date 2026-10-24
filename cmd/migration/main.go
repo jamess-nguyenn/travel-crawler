@@ -45,11 +45,7 @@ func run() error {
 	}
 
 	logger := applog.FromContext(
-		applog.New(
-			cfg.Log,
-			cfg.App.Name,
-		),
-		ctx,
+		applog.New(cfg.Log, cfg.App.Name), ctx,
 	).Named(constant.LoggerMigration)
 
 	db, err := database.Connect(cfg.MySQL)
