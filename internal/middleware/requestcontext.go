@@ -55,9 +55,5 @@ func getHeader(
 ) string {
 	value := r.Header.Get(header)
 
-	if value == "" {
-		return helper.NewUUID()
-	}
-
-	return value
+	return helper.ResolveTraceID(value)
 }

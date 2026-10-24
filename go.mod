@@ -21,6 +21,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/leodido/go-urn v1.5.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/dsig v1.0.0 // indirect
@@ -30,9 +31,12 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.0.13 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
+	github.com/pierrec/lz4/v4 v4.1.29 // indirect
 	github.com/pressly/goose/v3 v3.28.0 // indirect
 	github.com/redis/go-redis/v9 v9.23.0 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
+	github.com/segmentio/kafka-go v0.4.51 // indirect
 	github.com/sethvargo/go-retry v0.4.0 // indirect
 	github.com/valyala/fastjson v1.6.7 // indirect
 	go.uber.org/atomic v1.12.0 // indirect

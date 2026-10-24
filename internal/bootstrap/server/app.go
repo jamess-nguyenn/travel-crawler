@@ -24,12 +24,7 @@ func NewApp(
 ) *App {
 	app := &App{}
 
-	ctr := NewContainer(
-		db,
-		cfg,
-		cache,
-		logger,
-	)
+	ctr := NewContainer(db, cfg, cache, logger)
 
 	modules := []Module{
 		AuthModule{},
@@ -38,10 +33,7 @@ func NewApp(
 	}
 
 	for _, module := range modules {
-		module.Init(
-			app,
-			ctr,
-		)
+		module.Init(app, ctr)
 	}
 
 	return app

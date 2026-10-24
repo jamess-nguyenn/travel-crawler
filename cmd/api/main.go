@@ -19,10 +19,7 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	logger := applog.New(
-		cfg.Log,
-		cfg.App.Name,
-	).Named(constant.LoggerAPI)
+	logger := applog.New(cfg.Log, cfg.App.Name).Named(constant.LoggerAPI)
 
 	db, err := database.Connect(cfg.MySQL)
 	if err != nil {
@@ -69,18 +66,9 @@ func main() {
 		}
 	}()
 
-	app := server.NewApp(
-		db,
-		cfg,
-		cache,
-		logger,
-	)
+	app := server.NewApp(db, cfg, cache, logger)
 
-	handler := router.New(
-		app,
-		jwtMiddleware,
-		logger,
-	)
+	handler := router.New(app, jwtMiddleware, logger)
 
 	address := cfg.App.Address()
 
@@ -89,10 +77,7 @@ func main() {
 		"address", address,
 	)
 
-	if err := http.ListenAndServe(
-		address,
-		handler,
-	); err != nil {
+	if err := http.ListenAndServe(address, handler); err != nil {
 		logger.Errorw(
 			"failed to start server",
 			"address", address,

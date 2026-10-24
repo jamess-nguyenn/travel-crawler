@@ -208,7 +208,7 @@ func (s *syncService) Sync(
 			"request", pageReq,
 			"offset", offset,
 			"total", total,
-			"data", accommodations,
+			"data", helper.Sample(accommodations, constant.SampleLogSize),
 		)
 
 		pageLogger.Info("Search accommodations successfully")
@@ -279,7 +279,7 @@ func (s *syncService) persistAccommodation(
 			len(accommodations),
 			batchProgress,
 			len(batch),
-			batch,
+			helper.Sample(batch, constant.SampleDatabaseSize),
 		)
 
 		if err := s.accommodationRepo.Upsert(ctx, &batch, options); err != nil {
