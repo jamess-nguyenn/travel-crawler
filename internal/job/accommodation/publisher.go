@@ -3,8 +3,8 @@ package accommodation
 import (
 	"context"
 	"encoding/json"
-
 	"go.uber.org/zap"
+	"travel-crawler/internal/job"
 
 	"travel-crawler/internal/applog"
 	"travel-crawler/internal/constant"
@@ -44,13 +44,15 @@ func (p *Publisher) Publish(ctx context.Context) {
 	taskID := helper.NewUUID()
 
 	task := CrawlTask{
-		ID:           taskID,
-		Type:         CrawlTaskType,
-		Version:      CrawlTaskVersion,
+		TaskMetadata: job.TaskMetadata{
+			ID:          taskID,
+			Type:        CrawlTaskType,
+			Version:     CrawlTaskVersion,
+			RequestedAt: helper.NowUTC(),
+			TraceID:     traceID,
+		},
 		ProviderCode: constant.ProviderCodeNuitee,
 		Country:      "VN",
-		RequestedAt:  helper.NowUTC(),
-		TraceID:      traceID,
 	}
 
 	payload, err := json.Marshal(task)
