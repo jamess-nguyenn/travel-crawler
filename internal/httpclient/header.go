@@ -3,6 +3,7 @@ package httpclient
 const (
 	HeaderContentType   = "Content-Type"
 	HeaderAccept        = "Accept"
+	HeaderRetryAfter    = "Retry-After"
 	HeaderAuthorization = "Authorization"
 	HeaderAPIKey        = "X-API-Key"
 

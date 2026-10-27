@@ -6,10 +6,6 @@ import (
 	"travel-crawler/internal/applog"
 )
 
-const (
-	maxResponseLogSize int64 = 10 * 1024
-)
-
 func RegisterLogger(
 	client *resty.Client,
 	logger *zap.SugaredLogger,
@@ -39,7 +35,7 @@ func RegisterLogger(
 		)
 
 		// Include the parsed response only when it is small enough.
-		if size >= 0 && size <= maxResponseLogSize {
+		if shouldLogResponseBody(size) {
 			requestLogger = requestLogger.With(
 				"result", resp.Result(),
 			)

@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
@@ -35,7 +36,12 @@ func (c *Client) execute(ctx context.Context, method string, url string, req *HT
 
 	resp, err := r.Execute(method, url)
 	if err != nil {
-		return err
+		return fmt.Errorf(
+			"execute HTTP request: method=%s url=%s: %w",
+			method,
+			url,
+			err,
+		)
 	}
 
 	return c.handleResponse(resp)
