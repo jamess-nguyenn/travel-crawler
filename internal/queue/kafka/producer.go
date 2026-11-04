@@ -10,8 +10,14 @@ import (
 	"travel-crawler/internal/kafka"
 )
 
+type Message struct {
+	Key     string
+	Payload []byte
+}
+
 type Publisher interface {
 	Publish(ctx context.Context, key string, payload []byte) error
+	PublishBatch(ctx context.Context, messages []Message) error
 }
 
 type Producer struct {
@@ -40,17 +46,41 @@ func NewProducer(
 }
 
 func (p *Producer) Publish(ctx context.Context, key string, payload []byte) error {
+	return p.PublishBatch(ctx, []Message{
+		{
+			Key:     key,
+			Payload: payload,
+		},
+	})
+}
+
+func (p *Producer) PublishBatch(ctx context.Context, messages []Message) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 
-	message := kafkago.Message{
-		Key:   []byte(key),
-		Value: payload,
+	total := len(messages)
+
+	if total == 0 {
+		return nil
 	}
 
-	if err := p.writer.WriteMessages(ctx, message); err != nil {
-		return fmt.Errorf("write Kafka message to topic %s: %w", p.topic, err)
+	kafkaMessages := make([]kafkago.Message, 0, total)
+
+	for _, message := range messages {
+		kafkaMessages = append(kafkaMessages, kafkago.Message{
+			Key:   []byte(message.Key),
+			Value: message.Payload,
+		})
+	}
+
+	if err := p.writer.WriteMessages(ctx, kafkaMessages...); err != nil {
+		return fmt.Errorf(
+			"write %d Kafka messages to topic %s: %w",
+			total,
+			p.topic,
+			err,
+		)
 	}
 
 	return nil

@@ -21,24 +21,21 @@ type FailurePublisher interface {
 }
 
 type RetryHandler struct {
-	processor      Processor
-	retryPublisher FailurePublisher
-	dlqPublisher   FailurePublisher
-	maxAttempt     int
-	now            func() time.Time
+	processor    Processor
+	dlqPublisher FailurePublisher
+	maxAttempt   int
+	now          func() time.Time
 }
 
 func NewRetryHandler(
 	processor Processor,
-	retryPublisher FailurePublisher,
 	dlqPublisher FailurePublisher,
 ) *RetryHandler {
 	return &RetryHandler{
-		processor:      processor,
-		retryPublisher: retryPublisher,
-		dlqPublisher:   dlqPublisher,
-		maxAttempt:     retry.MaxAttempt,
-		now:            time.Now,
+		processor:    processor,
+		dlqPublisher: dlqPublisher,
+		maxAttempt:   retry.MaxAttempt,
+		now:          time.Now,
 	}
 }
 
@@ -119,24 +116,6 @@ func (h *RetryHandler) Handle(ctx context.Context, payload []byte) error {
 		}
 
 		delay := retry.Delay(err, attempt)
-		nextAttemptAt := now.Add(delay)
-
-		// This is a retry-event record for observability. It must not
-		// be consumed as a regular crawl task. If you later build a
-		// scheduler, give it responsibility for scheduling retry events.
-		if err := h.publishRetryEvent(
-			ctx,
-			payload,
-			task,
-			attempt,
-			err,
-			firstFailedAt,
-			nextAttemptAt,
-		); err != nil {
-			// Do not acknowledge the original message if we cannot
-			// durably publish the retry event.
-			return fmt.Errorf("publish retry event: %w", err)
-		}
 
 		if err := retry.Wait(ctx, delay); err != nil {
 			return err
@@ -166,43 +145,6 @@ func validateTask(task accomjob.CrawlTask) error {
 	}
 
 	return nil
-}
-
-func (h *RetryHandler) publishRetryEvent(
-	ctx context.Context,
-	payload []byte,
-	metadata job.Metadata,
-	attempt int,
-	cause error,
-	firstFailedAt time.Time,
-	nextAttemptAt time.Time,
-) error {
-	if h.retryPublisher == nil {
-		return errors.New("retry publisher is not configured")
-	}
-
-	now := h.now()
-
-	message := kafka.FailureMessage{
-		TaskID:          metadata.GetID(),
-		TaskType:        metadata.GetType(),
-		OriginalPayload: payload,
-		Attempt:         attempt,
-		MaxAttempt:      h.maxAttempt,
-		ErrorClass:      "retryable",
-		ErrorMessage:    cause.Error(),
-		FirstFailedAt:   firstFailedAt,
-		FailedAt:        now,
-		NextAttemptAt:   &nextAttemptAt,
-		TraceID:         metadata.GetTraceID(),
-	}
-
-	data, err := json.Marshal(message)
-	if err != nil {
-		return fmt.Errorf("marshal retry event: %w", err)
-	}
-
-	return h.retryPublisher.Publish(ctx, metadata.GetID(), data)
 }
 
 func (h *RetryHandler) publishDLQ(

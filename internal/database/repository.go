@@ -75,10 +75,12 @@ func (r *Repository[T]) Upsert(
 	data *[]T,
 	options UpsertOptions,
 ) error {
-	return DB(ctx, r.db).
-		Clauses(buildOnConflict(options)).
-		Create(data).
-		Error
+	return retryOperation(ctx, func() error {
+		return DB(ctx, r.db).
+			Clauses(buildOnConflict(options)).
+			Create(data).
+			Error
+	})
 }
 
 func (r *Repository[T]) Get(

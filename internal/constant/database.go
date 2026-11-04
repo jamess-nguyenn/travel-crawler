@@ -1,5 +1,5 @@
 package constant
 
 const (
-	DatabaseBatchSize = 1000
+	DatabaseBatchSize = 200
 )

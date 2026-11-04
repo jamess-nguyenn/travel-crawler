@@ -13,7 +13,7 @@ import (
 
 const (
 	MaxAttempt        = 3
-	DefaultRetryDelay = 2 * time.Second
+	DefaultRetryDelay = time.Second
 	MaxRetryDelay     = 30 * time.Second
 )
 

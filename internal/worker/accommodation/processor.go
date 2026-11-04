@@ -44,8 +44,8 @@ func (p *AccommodationProcessor) Process(ctx context.Context, task accomjob.Craw
 		wrkCtx,
 		task.ProviderCode,
 		accommodation.SearchRequest{
-			Country: task.Country,
-			City:    task.City,
+			Country:   task.Country,
+			UpdatedAt: task.UpdatedAt,
 		},
 	); err != nil {
 		logger.Errorw(

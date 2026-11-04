@@ -7,10 +7,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 	"travel-crawler/internal/applog"
 	"travel-crawler/internal/bootstrap/scheduler"
 	"travel-crawler/internal/config"
 	"travel-crawler/internal/constant"
+	"travel-crawler/internal/helper"
 	"travel-crawler/internal/kafka"
 )
 
@@ -57,8 +59,10 @@ func main() {
 		cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
 	)
 
-	if _, err := c.AddFunc("0 */2 * * * *", func() {
-		app.AccommodationPublisher.Publish(ctx)
+	if _, err := c.AddFunc("0 */10 * * * *", func() {
+		dateFrom := helper.NowUTC().Add(-30 * time.Minute)
+
+		app.AccommodationPublisher.Publish(ctx, &dateFrom, nil)
 	}); err != nil {
 		logger.Errorw(
 			"failed to register accommodation crawl schedule",

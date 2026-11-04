@@ -3,6 +3,8 @@ package httpclient
 import (
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
+	"net/http"
+	"strings"
 	"travel-crawler/internal/applog"
 )
 
@@ -28,7 +30,7 @@ func RegisterLogger(
 			"path", r.PathParams,
 			"form", r.FormData,
 			"body", r.Body,
-			"header", r.Header,
+			"header", safeHeader(r.Header),
 			"status_code", resp.StatusCode(),
 			"response_size_bytes", size,
 			"duration", resp.Time().String(),
@@ -54,4 +56,28 @@ func RegisterLogger(
 
 		return nil
 	})
+}
+
+func safeHeader(headers http.Header) map[string][]string {
+	result := make(map[string][]string, len(headers))
+
+	for key, values := range headers {
+		normalized := strings.ToLower(key)
+
+		switch normalized {
+		case "authorization",
+			"x-api-key",
+			"api-key",
+			"cookie",
+			"set-cookie",
+			"x-auth-token":
+
+			result[key] = []string{"[REDACTED]"}
+
+		default:
+			result[key] = values
+		}
+	}
+
+	return result
 }

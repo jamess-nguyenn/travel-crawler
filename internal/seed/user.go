@@ -13,7 +13,7 @@ import (
 func seedUser(db *gorm.DB) error {
 	now := time.Now().UTC()
 
-	countries := []user.User{
+	users := []user.User{
 		{
 			Model: model.Model{
 				ID:        constant.SystemUserID,
@@ -39,6 +39,6 @@ func seedUser(db *gorm.DB) error {
 			},
 			DoNothing: true,
 		}).
-		Create(&countries).
+		Create(&users).
 		Error
 }

@@ -2,15 +2,16 @@ package accommodation
 
 import (
 	"context"
+	"time"
 
 	"travel-crawler/internal/provider"
 )
 
 type SearchRequest struct {
-	Country  string
-	City     string
-	Page     int
-	PageSize int
+	Country   string
+	UpdatedAt *time.Time
+	Page      int
+	PageSize  int
 }
 
 type SearchResponse struct {

@@ -262,6 +262,11 @@ func (s *syncService) persistAccommodation(
 	accommodations []Accommodation,
 	logger *zap.SugaredLogger,
 ) error {
+	total := len(accommodations)
+	if total == 0 {
+		return nil
+	}
+
 	options := database.UpsertOptions{
 		ConflictColumns: UpsertConflictColumns,
 		UpdateColumns:   UpsertUpdateColumns,
@@ -276,7 +281,7 @@ func (s *syncService) persistAccommodation(
 
 		batchLogger := applog.WithBatch(
 			logger,
-			len(accommodations),
+			total,
 			batchProgress,
 			len(batch),
 			helper.Sample(batch, constant.SampleDatabaseSize),
@@ -285,6 +290,8 @@ func (s *syncService) persistAccommodation(
 		if err := s.accommodationRepo.Upsert(ctx, &batch, options); err != nil {
 			batchLogger.Errorw(
 				"Fail to upsert accommodation batch",
+				"first_external_id", batch[0].ExternalID,
+				"last_external_id", batch[len(batch)-1].ExternalID,
 				"error", err,
 			)
 
