@@ -20,15 +20,6 @@ func (AccommodationModule) Init(app *App, ctr *Container) error {
 		return fmt.Errorf("create accommodation consumer: %w", err)
 	}
 
-	retryProducer, err := kafka.NewProducer(
-		ctr.kafka,
-		kafka.TopicAccommodationCrawlRetry,
-	)
-	if err != nil {
-		_ = consumer.Close()
-		return fmt.Errorf("create accommodation retry producer: %w", err)
-	}
-
 	dlqProducer, err := kafka.NewProducer(
 		ctr.kafka,
 		kafka.TopicAccommodationCrawlDLQ,
@@ -57,7 +48,6 @@ func (AccommodationModule) Init(app *App, ctr *Container) error {
 
 	handler := accomworker.NewRetryHandler(
 		processor,
-		retryProducer,
 		dlqProducer,
 	)
 

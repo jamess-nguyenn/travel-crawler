@@ -43,12 +43,17 @@ func (f *Factory) Create(code string) (accommodation.Provider, error) {
 			f.logger,
 		)
 
-		return nuitee.New(client), nil
+		limiter, err := nuitee.NewRedisRequestLimiter(
+			f.cache,
+			f.config.Nuitee.RequestInterval,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("initialize %q rate limiter: %w", code, err)
+		}
+
+		return nuitee.New(client, limiter), nil
 
 	default:
-		return nil, fmt.Errorf(
-			"unsupported accommodation provider %q",
-			code,
-		)
+		return nil, fmt.Errorf("unsupported accommodation provider %q", code)
 	}
 }

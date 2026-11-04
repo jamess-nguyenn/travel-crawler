@@ -1,0 +1,4 @@
+[mysqld]
+
+# Disable binary logging for local development.
+skip-log-bin

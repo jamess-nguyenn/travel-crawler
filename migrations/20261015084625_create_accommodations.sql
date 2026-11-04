@@ -9,7 +9,7 @@ CREATE TABLE accommodations (
     description TEXT NOT NULL,
     property_type VARCHAR(100) NOT NULL,
     chain VARCHAR(255) NOT NULL,
-    currency CHAR(3) NOT NULL,
+    currency VARCHAR(64) NOT NULL,
     country CHAR(2) NOT NULL,
     city VARCHAR(255) NOT NULL,
     latitude DECIMAL(10,7) NULL,

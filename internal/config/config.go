@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	"net"
 	"strings"
+	"time"
 )
 
 type App struct {
@@ -70,8 +71,9 @@ type Kafka struct {
 }
 
 type Nuitee struct {
-	BaseURL string `env:"BASE_URL"`
-	APIKey  string `env:"API_KEY"`
+	BaseURL         string        `env:"BASE_URL"`
+	APIKey          string        `env:"API_KEY"`
+	RequestInterval time.Duration `env:"REQUEST_INTERVAL"`
 }
 
 type Config struct {
