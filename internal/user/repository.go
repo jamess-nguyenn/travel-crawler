@@ -13,6 +13,7 @@ type UserRepository interface {
 		ctx context.Context,
 		email string,
 		auth0ID string,
+		columns []string,
 	) ([]User, error)
 }
 
@@ -32,6 +33,7 @@ func (r *repository) GetByEmailOrAuth0ID(
 	ctx context.Context,
 	email string,
 	auth0ID string,
+	columns []string,
 ) ([]User, error) {
 	var users []User
 
@@ -41,6 +43,7 @@ func (r *repository) GetByEmailOrAuth0ID(
 			email,
 			auth0ID,
 		).
+		Select(columns).
 		Limit(2).
 		Find(&users).
 		Error; err != nil {

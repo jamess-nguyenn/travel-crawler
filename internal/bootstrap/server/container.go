@@ -20,6 +20,7 @@ type Container struct {
 
 	auth0Client auth0.Client
 
+	cache  *redis.Cache
 	logger *zap.SugaredLogger
 }
 
@@ -39,6 +40,7 @@ func NewContainer(
 
 		auth0Client: auth0.New(http, cfg.Auth0, cache, logger),
 
+		cache:  cache,
 		logger: logger,
 	}
 }

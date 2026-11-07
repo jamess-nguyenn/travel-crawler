@@ -90,8 +90,12 @@ func (r ListRequest) GetPageSize() int {
 	return value
 }
 
+func IsNoLimit(pageSize int) bool {
+	return pageSize >= PageSizeAll
+}
+
 func (r ListRequest) NoLimit() bool {
-	return r.GetPageSize() >= PageSizeAll
+	return IsNoLimit(r.GetPageSize())
 }
 
 func (r ListRequest) GetOffset() int {
