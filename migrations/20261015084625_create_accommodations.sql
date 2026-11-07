@@ -30,8 +30,7 @@ CREATE TABLE accommodations (
     deleted_by BIGINT UNSIGNED NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_accommodations_provider_external (external_id, provider_code),
-    KEY idx_accommodations_type_location_deleted (property_type, country, city, deleted_at),
-    KEY idx_accommodations_location_deleted (country, city, deleted_at)
+    KEY idx_accommodations_created_deleted_id (created_at, deleted_at, id)
 ) AUTO_INCREMENT = 10001;
 -- +goose StatementEnd
 

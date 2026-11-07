@@ -26,6 +26,7 @@ type BaseRepository[T any] interface {
 	Get(
 		ctx context.Context,
 		conditions map[string]any,
+		columns []string,
 	) (*T, error)
 
 	UpdateByID(
@@ -86,11 +87,13 @@ func (r *Repository[T]) Upsert(
 func (r *Repository[T]) Get(
 	ctx context.Context,
 	conditions map[string]any,
+	columns []string,
 ) (*T, error) {
 	var record T
 
 	if err := DB(ctx, r.db).
 		Where(conditions).
+		Select(columns).
 		First(&record).
 		Error; err != nil {
 		return nil, err
@@ -133,7 +136,7 @@ func (r *Repository[T]) List(
 
 	if err := query.
 		Scopes(listQuery.Scopes...).
-		Select(listQuery.NormalizeColumns()).
+		Select(listQuery.Columns).
 		Find(&records).
 		Error; err != nil {
 		return nil, 0, err
@@ -151,7 +154,7 @@ func (r *Repository[T]) ListAll(
 	if err := DB(ctx, r.db).
 		Where(listQuery.Conditions).
 		Scopes(listQuery.Filters...).
-		Select(listQuery.NormalizeColumns()).
+		Select(listQuery.Columns).
 		Find(&records).
 		Error; err != nil {
 		return nil, err

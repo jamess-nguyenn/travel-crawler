@@ -8,11 +8,3 @@ type ListQuery struct {
 	Scopes     []scope.Scope
 	Columns    []string
 }
-
-func (q ListQuery) NormalizeColumns() []string {
-	if len(q.Columns) > 0 {
-		return q.Columns
-	}
-
-	return []string{"*"}
-}

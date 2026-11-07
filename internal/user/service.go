@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"travel-crawler/internal/applog"
+	"travel-crawler/internal/cache"
 	"travel-crawler/internal/constant"
 	"travel-crawler/internal/database/scope"
 	"travel-crawler/internal/helper"
@@ -45,17 +46,20 @@ type Service interface {
 type service struct {
 	txManager *database.TxManager
 	userRepo  UserRepository
+	cache     cache.Store
 	logger    *zap.SugaredLogger
 }
 
 func NewService(
 	txManager *database.TxManager,
 	userRepo UserRepository,
+	cache cache.Store,
 	logger *zap.SugaredLogger,
 ) Service {
 	return &service{
 		txManager: txManager,
 		userRepo:  userRepo,
+		cache:     cache,
 		logger:    logger,
 	}
 }
@@ -80,8 +84,8 @@ func (s *service) persistUser(
 	logger := applog.FromContext(s.logger, ctx)
 
 	options := database.UpsertOptions{
-		ConflictColumns: UpsertConflictColumns,
-		UpdateColumns:   UpsertUpdateColumns,
+		ConflictColumns: upsertConflictColumns,
+		UpdateColumns:   upsertUpdateColumns,
 	}
 
 	batches := helper.Chunk(users, constant.DatabaseBatchSize)
@@ -117,14 +121,16 @@ func (s *service) persistUser(
 func (s *service) get(
 	ctx context.Context,
 	conditions map[string]any,
+	columns []string,
 ) (*User, error) {
 	logger := applog.FromContext(s.logger, ctx)
 
-	user, err := s.userRepo.Get(ctx, conditions)
+	user, err := s.userRepo.Get(ctx, conditions, columns)
 
 	getLogger := applog.WithGet(
 		logger,
 		conditions,
+		columns,
 		user,
 	)
 
@@ -146,11 +152,36 @@ func (s *service) Get(
 	ctx context.Context,
 	req GetRequest,
 ) (*User, error) {
-	conditions := map[string]any{
-		"id": req.ID,
+	logger := applog.FromContext(s.logger, ctx)
+
+	key := CacheKeyByID(uint64(*req.ID))
+
+	loader := func() (*User, error) {
+		conditions := map[string]any{"id": req.ID}
+
+		return s.get(ctx, conditions, selectColumns)
 	}
 
-	return s.get(ctx, conditions)
+	user, cacheHit, err := cache.GetOrLoad(
+		ctx,
+		s.cache,
+		key,
+		CacheDuration(),
+		logger,
+		loader,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Infow(
+		"Get user successfully",
+		"key", key,
+		"cache_hit", cacheHit,
+	)
+
+	return user, nil
 }
 
 func (s *service) UpdateByID(
@@ -161,11 +192,11 @@ func (s *service) UpdateByID(
 ) error {
 	logger := applog.FromContext(s.logger, ctx)
 
-	conditions := map[string]any{
-		"id": ID,
-	}
+	conditions := map[string]any{"id": ID}
+	columns := []string{"id", "auth0_id"}
 
-	if _, err := s.get(ctx, conditions); err != nil {
+	existingUser, err := s.get(ctx, conditions, columns)
+	if err != nil {
 		return err
 	}
 
@@ -196,6 +227,8 @@ func (s *service) UpdateByID(
 		return err
 	}
 
+	s.invalidateUserCache(ctx, ID, existingUser.Auth0ID)
+
 	updateLogger.Info("Update user successfully")
 
 	return nil
@@ -219,7 +252,7 @@ func (s *service) buildListQuery(
 		Conditions: conditions,
 		Filters:    filters,
 		Scopes:     scope.BuildListScopes(req, sortColumns, defaultSortColumn),
-		Columns:    nil,
+		Columns:    selectColumns,
 	}
 }
 
@@ -281,7 +314,7 @@ func (s *service) buildListAllQuery(
 		Conditions: conditions,
 		Filters:    filters,
 		Scopes:     []scope.Scope{scope.OrderByDesc(defaultSortColumn)},
-		Columns:    nil,
+		Columns:    selectColumns,
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"travel-crawler/internal/applog"
 	"travel-crawler/internal/auth0"
+	"travel-crawler/internal/cache"
 	"travel-crawler/internal/database"
 	"travel-crawler/internal/helper"
 	"travel-crawler/internal/model"
@@ -35,6 +36,7 @@ type service struct {
 	txManager   *database.TxManager
 	userRepo    user.UserRepository
 	auth0Client auth0.Client
+	cache       cache.Store
 	logger      *zap.SugaredLogger
 }
 
@@ -42,12 +44,14 @@ func NewService(
 	txManager *database.TxManager,
 	userRepo user.UserRepository,
 	auth0Client auth0.Client,
+	cache cache.Store,
 	logger *zap.SugaredLogger,
 ) Service {
 	return &service{
 		txManager:   txManager,
 		userRepo:    userRepo,
 		auth0Client: auth0Client,
+		cache:       cache,
 		logger:      logger,
 	}
 }
@@ -59,11 +63,14 @@ func (s *service) Create(
 ) (*user.User, error) {
 	logger := applog.FromContext(s.logger, ctx)
 
-	existingUsers, err := s.userRepo.GetByEmailOrAuth0ID(ctx, req.Email, req.Auth0ID)
+	columns := []string{"id", "email", "auth0_id"}
+
+	existingUsers, err := s.userRepo.GetByEmailOrAuth0ID(ctx, req.Email, req.Auth0ID, columns)
 
 	getLogger := logger.With(
 		"email", req.Email,
 		"auth0_id", req.Auth0ID,
+		"columns", columns,
 		"data", existingUsers,
 	)
 
@@ -159,36 +166,61 @@ func (s *service) Get(
 ) (*requestcontext.User, error) {
 	logger := applog.FromContext(s.logger, ctx)
 
-	conditions := map[string]any{
-		"auth0_id": auth0ID,
+	key := user.CacheKeyByAuth0ID(auth0ID)
+
+	loader := func() (*requestcontext.User, error) {
+		conditions := map[string]any{"auth0_id": auth0ID}
+		columns := []string{"id", "email", "auth0_id", "full_name", "status"}
+
+		userDB, err := s.userRepo.Get(ctx, conditions, columns)
+
+		getLogger := applog.WithGet(
+			logger,
+			conditions,
+			columns,
+			userDB,
+		)
+
+		if err != nil {
+			getLogger.Errorw(
+				"Fail to get user",
+				"error", err,
+			)
+
+			return nil, err
+		}
+
+		getLogger.Info("Get user successfully")
+
+		return &requestcontext.User{
+			ID:       userDB.ID,
+			Email:    userDB.Email,
+			Auth0ID:  userDB.Auth0ID,
+			FullName: userDB.FullName,
+			Status:   string(userDB.Status),
+		}, nil
 	}
 
-	userDB, err := s.userRepo.Get(ctx, conditions)
-
-	getLogger := applog.WithGet(
+	result, cacheHit, err := cache.GetOrLoad(
+		ctx,
+		s.cache,
+		key,
+		user.CacheDuration(),
 		logger,
-		conditions,
-		userDB,
+		loader,
 	)
 
 	if err != nil {
-		getLogger.Errorw(
-			"Fail to get user",
-			"error", err,
-		)
-
 		return nil, err
 	}
 
-	getLogger.Info("Get user successfully")
+	logger.Infow(
+		"Get user successfully",
+		"key", key,
+		"cache_hit", cacheHit,
+	)
 
-	return &requestcontext.User{
-		ID:       userDB.ID,
-		Email:    userDB.Email,
-		Auth0ID:  userDB.Auth0ID,
-		FullName: userDB.FullName,
-		Status:   string(userDB.Status),
-	}, nil
+	return result, nil
 }
 
 func (s *service) SendVerifyEmail(
