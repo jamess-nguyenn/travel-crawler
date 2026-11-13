@@ -14,6 +14,7 @@ func (AuthModule) Init(
 		ctr.txManager,
 		ctr.userRepo,
 		ctr.auth0Client,
+		ctr.cache,
 		ctr.logger,
 	)
 }

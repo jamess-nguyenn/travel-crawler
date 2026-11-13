@@ -12,6 +12,11 @@ import (
 )
 
 const (
+	cachePrefix = "auth0"
+	cacheTTL    = 1 // days
+)
+
+const (
 	GrantTypeClientCredentials = "client_credentials"
 )
 
@@ -51,7 +56,7 @@ func New(
 
 func (c *client) cacheKey() string {
 	return helper.JoinKey(
-		"auth0",
+		cachePrefix,
 		"token",
 		c.config.ClientID,
 	)
@@ -73,7 +78,7 @@ func (c *client) getCachedAccessToken(ctx context.Context, cacheKey string) (str
 }
 
 func (c *client) cacheAccessToken(ctx context.Context, cacheKey string, accessToken string) {
-	if err := c.cache.Set(ctx, cacheKey, accessToken, helper.DayTTL(1)); err != nil {
+	if err := c.cache.Set(ctx, cacheKey, accessToken, helper.DayTTL(cacheTTL)); err != nil {
 		c.logger.Warnw(
 			"Fail to cache access token",
 			"key", cacheKey,

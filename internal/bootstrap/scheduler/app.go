@@ -2,6 +2,11 @@ package scheduler
 
 import (
 	"go.uber.org/zap"
+	"gorm.io/gorm"
+	"travel-crawler/internal/config"
+	airlinejob "travel-crawler/internal/job/airline"
+	airportjob "travel-crawler/internal/job/airport"
+	"travel-crawler/internal/redis"
 
 	"travel-crawler/internal/job/accommodation"
 	"travel-crawler/internal/kafka"
@@ -9,18 +14,25 @@ import (
 
 type App struct {
 	AccommodationPublisher *accommodation.Publisher
+	AirlineSyncJob         *airlinejob.SyncJob
+	AirportSyncJob         *airportjob.SyncJob
 }
 
 func NewApp(
+	db *gorm.DB,
+	cfg *config.Config,
+	cache *redis.Cache,
 	kafka *kafka.Client,
 	logger *zap.SugaredLogger,
 ) (*App, error) {
 	app := &App{}
 
-	ctr := NewContainer(kafka, logger)
+	ctr := NewContainer(db, cfg, cache, kafka, logger)
 
 	modules := []Module{
 		AccommodationModule{},
+		AirlineModule{},
+		AirportModule{},
 	}
 
 	for _, module := range modules {

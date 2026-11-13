@@ -9,7 +9,7 @@ CREATE TABLE accommodations (
     description TEXT NOT NULL,
     property_type VARCHAR(100) NOT NULL,
     chain VARCHAR(255) NOT NULL,
-    currency CHAR(3) NOT NULL,
+    currency VARCHAR(64) NOT NULL,
     country CHAR(2) NOT NULL,
     city VARCHAR(255) NOT NULL,
     latitude DECIMAL(10,7) NULL,
@@ -30,8 +30,7 @@ CREATE TABLE accommodations (
     deleted_by BIGINT UNSIGNED NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_accommodations_provider_external (external_id, provider_code),
-    KEY idx_accommodations_type_location_deleted (property_type, country, city, deleted_at),
-    KEY idx_accommodations_location_deleted (country, city, deleted_at)
+    KEY idx_accommodations_created_deleted_id (created_at, deleted_at, id)
 ) AUTO_INCREMENT = 10001;
 -- +goose StatementEnd
 

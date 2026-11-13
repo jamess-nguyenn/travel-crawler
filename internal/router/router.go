@@ -6,6 +6,8 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"travel-crawler/internal/accommodation"
+	"travel-crawler/internal/airline"
+	"travel-crawler/internal/airport"
 	"travel-crawler/internal/auth"
 	"travel-crawler/internal/bootstrap/server"
 	"travel-crawler/internal/middleware"
@@ -129,6 +131,54 @@ func New(
 		).
 		Methods(http.MethodGet).
 		Name("ListAccommodation")
+
+	//Airlines
+
+	apiAirline := protectedAPI.PathPrefix("/airlines").Subrouter()
+
+	apiAirline.
+		HandleFunc(
+			"/{id:[0-9]+}",
+			airline.Get(
+				app.AirlineService,
+			),
+		).
+		Methods(http.MethodGet).
+		Name("GetAirline")
+
+	apiAirline.
+		HandleFunc(
+			"",
+			airline.List(
+				app.AirlineService,
+			),
+		).
+		Methods(http.MethodGet).
+		Name("ListAirline")
+
+	//Airports
+
+	apiAirport := protectedAPI.PathPrefix("/airports").Subrouter()
+
+	apiAirport.
+		HandleFunc(
+			"/{id:[0-9]+}",
+			airport.Get(
+				app.AirportService,
+			),
+		).
+		Methods(http.MethodGet).
+		Name("GetAirport")
+
+	apiAirport.
+		HandleFunc(
+			"",
+			airport.List(
+				app.AirportService,
+			),
+		).
+		Methods(http.MethodGet).
+		Name("ListAirport")
 
 	return router
 }

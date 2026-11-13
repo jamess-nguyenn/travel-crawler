@@ -1,6 +1,7 @@
 package accommodation
 
 import (
+	"time"
 	"travel-crawler/internal/job"
 )
 
@@ -11,7 +12,7 @@ const (
 
 type CrawlTask struct {
 	job.TaskMetadata
-	ProviderCode string `json:"provider_code"`
-	Country      string `json:"country,omitempty"`
-	City         string `json:"city,omitempty"`
+	ProviderCode string     `json:"provider_code"`
+	Country      string     `json:"country,omitempty"`
+	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
 }

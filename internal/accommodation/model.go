@@ -15,7 +15,7 @@ type Accommodation struct {
 	Description      string   `json:"description" gorm:"column:description;type:text;not null"`
 	PropertyType     string   `json:"property_type" gorm:"column:property_type;size:100;not null"`
 	Chain            string   `json:"chain" gorm:"column:chain;size:255;not null"`
-	Currency         string   `json:"currency" gorm:"column:currency;type:char(3);not null"`
+	Currency         string   `json:"currency" gorm:"column:currency;size:64;not null"`
 	Country          string   `json:"country" gorm:"column:country;type:char(2);not null"`
 	City             string   `json:"city" gorm:"column:city;size:255;not null"`
 	Latitude         *float64 `json:"latitude" gorm:"column:latitude;type:decimal(10,7)"`

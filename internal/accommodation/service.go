@@ -78,15 +78,15 @@ func (s *service) Get(
 ) (*Accommodation, error) {
 	logger := applog.FromContext(s.logger, ctx)
 
-	conditions := map[string]any{
-		"id": req.ID,
-	}
+	conditions := map[string]any{"id": req.ID}
+	columns := append(selectColumns, "description")
 
-	accommodation, err := s.accommodationRepo.Get(ctx, conditions)
+	accommodation, err := s.accommodationRepo.Get(ctx, conditions, columns)
 
 	getLogger := applog.WithGet(
 		logger,
 		conditions,
+		columns,
 		accommodation,
 	)
 
@@ -110,7 +110,7 @@ func (s *service) buildListQuery(
 	conditions := make(map[string]any)
 
 	filters := []scope.Scope{
-		scope.SearchColumns([]string{"email", "full_name", "phone_number"}, req.Search),
+		scope.SearchColumns([]string{"name"}, req.Search),
 		scope.TimeRange("created_at", req.DateFrom, req.DateTo),
 	}
 
@@ -118,7 +118,7 @@ func (s *service) buildListQuery(
 		Conditions: conditions,
 		Filters:    filters,
 		Scopes:     scope.BuildListScopes(req, sortColumns, defaultSortColumn),
-		Columns:    nil,
+		Columns:    selectColumns,
 	}
 }
 
@@ -262,9 +262,14 @@ func (s *syncService) persistAccommodation(
 	accommodations []Accommodation,
 	logger *zap.SugaredLogger,
 ) error {
+	total := len(accommodations)
+	if total == 0 {
+		return nil
+	}
+
 	options := database.UpsertOptions{
-		ConflictColumns: UpsertConflictColumns,
-		UpdateColumns:   UpsertUpdateColumns,
+		ConflictColumns: upsertConflictColumns,
+		UpdateColumns:   upsertUpdateColumns,
 	}
 
 	batches := helper.Chunk(accommodations, constant.DatabaseBatchSize)
@@ -276,7 +281,7 @@ func (s *syncService) persistAccommodation(
 
 		batchLogger := applog.WithBatch(
 			logger,
-			len(accommodations),
+			total,
 			batchProgress,
 			len(batch),
 			helper.Sample(batch, constant.SampleDatabaseSize),
@@ -285,6 +290,8 @@ func (s *syncService) persistAccommodation(
 		if err := s.accommodationRepo.Upsert(ctx, &batch, options); err != nil {
 			batchLogger.Errorw(
 				"Fail to upsert accommodation batch",
+				"first_external_id", batch[0].ExternalID,
+				"last_external_id", batch[len(batch)-1].ExternalID,
 				"error", err,
 			)
 

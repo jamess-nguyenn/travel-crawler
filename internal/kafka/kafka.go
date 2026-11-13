@@ -17,6 +17,8 @@ const (
 	defaultConnectionTimeout = 5 * time.Second
 	defaultReadTimeout       = 10 * time.Second
 	defaultWriteTimeout      = 10 * time.Second
+	defaultBatchTimeout      = 10 * time.Millisecond
+	defaultBatchSize         = 50
 )
 
 type Client struct {
@@ -78,6 +80,8 @@ func (c *Client) NewWriter(topic string) (*kafkago.Writer, error) {
 		RequiredAcks: kafkago.RequireAll,
 		Async:        false,
 		WriteTimeout: defaultWriteTimeout,
+		BatchTimeout: defaultBatchTimeout,
+		BatchSize:    defaultBatchSize,
 	}
 
 	c.writers = append(c.writers, writer)

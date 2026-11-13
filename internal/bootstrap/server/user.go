@@ -13,6 +13,7 @@ func (UserModule) Init(
 	app.UserService = user.NewService(
 		ctr.txManager,
 		ctr.userRepo,
+		ctr.cache,
 		ctr.logger,
 	)
 }

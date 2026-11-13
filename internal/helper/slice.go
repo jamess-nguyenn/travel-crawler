@@ -36,3 +36,13 @@ func MapSlice[T any, R any](items []T, mapper func(T) R) []R {
 
 	return result
 }
+
+func MapKeys[K comparable, V any](items map[K]V) []K {
+	keys := make([]K, 0, len(items))
+
+	for key := range items {
+		keys = append(keys, key)
+	}
+
+	return keys
+}

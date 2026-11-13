@@ -70,24 +70,34 @@ type Kafka struct {
 }
 
 type Nuitee struct {
-	BaseURL string `env:"BASE_URL"`
-	APIKey  string `env:"API_KEY"`
+	BaseURL          string `env:"BASE_URL"`
+	APIKey           string `env:"API_KEY"`
+	RequestPerSecond int    `env:"REQUEST_PER_SECOND"`
 }
 
 type Config struct {
-	App                       App    `env-prefix:"APP_"`
-	Log                       Log    `env-prefix:"LOG_"`
-	Auth0                     Auth0  `env-prefix:"AUTH0_"`
-	MySQL                     MySQL  `env-prefix:"DB_MYSQL_"`
-	Redis                     Redis  `env-prefix:"REDIS_"`
-	Kafka                     Kafka  `env-prefix:"KAFKA_"`
-	Nuitee                    Nuitee `env-prefix:"NUITEE_"`
+	App    App    `env-prefix:"APP_"`
+	Log    Log    `env-prefix:"LOG_"`
+	Auth0  Auth0  `env-prefix:"AUTH0_"`
+	MySQL  MySQL  `env-prefix:"DB_MYSQL_"`
+	Redis  Redis  `env-prefix:"REDIS_"`
+	Kafka  Kafka  `env-prefix:"KAFKA_"`
+	Nuitee Nuitee `env-prefix:"NUITEE_"`
+
 	AccommodationProvidersKey string `env:"ACCOMMODATION_PROVIDERS"`
-	AccommodationProviders    []string
+	AirlineProvidersKey       string `env:"AIRLINE_PROVIDERS"`
+
+	AccommodationProviders []string
+	AirlineProviders       []string
 }
 
 func (c *Config) Init() {
-	c.AccommodationProviders = strings.Split(strings.Trim(c.AccommodationProvidersKey, ","), ",")
+	c.AccommodationProviders = parseProviders(c.AccommodationProvidersKey)
+	c.AirlineProviders = parseProviders(c.AirlineProvidersKey)
+}
+
+func parseProviders(key string) []string {
+	return strings.Split(strings.Trim(key, ","), ",")
 }
 
 func Load() (*Config, error) {
