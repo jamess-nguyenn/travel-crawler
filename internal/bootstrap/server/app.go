@@ -4,6 +4,8 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"travel-crawler/internal/accommodation"
+	"travel-crawler/internal/airline"
+	"travel-crawler/internal/airport"
 	"travel-crawler/internal/auth"
 	"travel-crawler/internal/config"
 	"travel-crawler/internal/redis"
@@ -14,6 +16,8 @@ type App struct {
 	AuthService          auth.Service
 	UserService          user.Service
 	AccommodationService accommodation.Service
+	AirlineService       airline.Service
+	AirportService       airport.Service
 }
 
 func NewApp(
@@ -30,6 +34,8 @@ func NewApp(
 		AuthModule{},
 		UserModule{},
 		AccommodationModule{},
+		AirlineModule{},
+		AirportModule{},
 	}
 
 	for _, module := range modules {

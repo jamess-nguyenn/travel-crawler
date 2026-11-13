@@ -12,8 +12,10 @@ import (
 	"travel-crawler/internal/bootstrap/scheduler"
 	"travel-crawler/internal/config"
 	"travel-crawler/internal/constant"
+	"travel-crawler/internal/database"
 	"travel-crawler/internal/helper"
 	"travel-crawler/internal/kafka"
+	"travel-crawler/internal/redis"
 )
 
 func main() {
@@ -26,6 +28,42 @@ func main() {
 	}
 
 	logger := applog.New(cfg.Log, cfg.App.Name).Named(constant.LoggerScheduler)
+
+	db, err := database.Connect(cfg.MySQL)
+	if err != nil {
+		logger.Errorw(
+			"failed to connect database",
+			"error", err,
+		)
+		return
+	}
+
+	defer func() {
+		if err := database.Close(db); err != nil {
+			logger.Warnw(
+				"failed to close database",
+				"error", err,
+			)
+		}
+	}()
+
+	cache, err := redis.NewCache(cfg.Redis, cfg.App.Key)
+	if err != nil {
+		logger.Errorw(
+			"failed to connect redis",
+			"error", err,
+		)
+		return
+	}
+
+	defer func() {
+		if err := cache.Close(); err != nil {
+			logger.Warnw(
+				"failed to close cache",
+				"error", err,
+			)
+		}
+	}()
 
 	kafkaCli, err := kafka.Connect(ctx, cfg.Kafka)
 	if err != nil {
@@ -45,7 +83,7 @@ func main() {
 		}
 	}()
 
-	app, err := scheduler.NewApp(kafkaCli, logger)
+	app, err := scheduler.NewApp(db, cfg, cache, kafkaCli, logger)
 	if err != nil {
 		logger.Errorw(
 			"failed to initialize cron scheduler",
@@ -66,6 +104,16 @@ func main() {
 	}); err != nil {
 		logger.Errorw(
 			"failed to register accommodation crawl schedule",
+			"error", err,
+		)
+		return
+	}
+
+	if _, err := c.AddFunc("0 0 1 * * *", func() {
+		app.AirlineSyncJob.Run(ctx)
+	}); err != nil {
+		logger.Errorw(
+			"failed to register airline crawl schedule",
 			"error", err,
 		)
 		return

@@ -1,4 +1,4 @@
-package nuitee
+package accommodation
 
 import "time"
 

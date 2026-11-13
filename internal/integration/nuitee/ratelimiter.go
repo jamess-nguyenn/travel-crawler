@@ -10,35 +10,35 @@ import (
 )
 
 const (
-	nuiteeHotelsRateLimitKey = "ratelimit:nuitee:hotels"
-	nuiteeCooldownKey        = "ratelimit:nuitee:cooldown"
+	nuiteeRateLimitKey = "ratelimit:nuitee"
+	nuiteeCooldownKey  = "ratelimit:nuitee:cooldown"
 )
 
 type redisRequestLimiter struct {
-	cache    *redis.Cache
-	interval time.Duration
+	cache            *redis.Cache
+	requestPerSecond int
 }
 
 func NewRedisRequestLimiter(
 	cache *redis.Cache,
-	interval time.Duration,
+	requestPerSecond int,
 ) (provider.RateLimiter, error) {
-	if interval <= 0 {
-		return nil, fmt.Errorf("rate limit interval must be positive")
+	if requestPerSecond <= 0 || requestPerSecond > 1000000 {
+		return nil, fmt.Errorf("request per second must be between 1 and 1000000")
 	}
 
 	return &redisRequestLimiter{
-		cache:    cache,
-		interval: interval,
+		cache:            cache,
+		requestPerSecond: requestPerSecond,
 	}, nil
 }
 
 func (l *redisRequestLimiter) Wait(ctx context.Context) error {
 	return l.cache.WaitRateLimit(
 		ctx,
-		nuiteeHotelsRateLimitKey,
+		nuiteeRateLimitKey,
 		nuiteeCooldownKey,
-		l.interval,
+		l.requestPerSecond,
 	)
 }
 

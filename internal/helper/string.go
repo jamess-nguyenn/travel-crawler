@@ -16,3 +16,11 @@ func StringValue(value *string) string {
 func ParseString(value int) string {
 	return strconv.Itoa(value)
 }
+
+func StringPtrOrNil(value string) *string {
+	if value == "" {
+		return nil
+	}
+
+	return &value
+}

@@ -4,6 +4,8 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"travel-crawler/internal/accommodation"
+	"travel-crawler/internal/airline"
+	"travel-crawler/internal/airport"
 	"travel-crawler/internal/auth0"
 	"travel-crawler/internal/config"
 	"travel-crawler/internal/database"
@@ -17,6 +19,8 @@ type Container struct {
 
 	userRepo          user.UserRepository
 	accommodationRepo accommodation.AccommodationRepository
+	airlineRepo       airline.AirlineRepository
+	airportRepo       airport.AirportRepository
 
 	auth0Client auth0.Client
 
@@ -37,6 +41,8 @@ func NewContainer(
 
 		userRepo:          user.NewRepository(db),
 		accommodationRepo: accommodation.NewRepository(db),
+		airlineRepo:       airline.NewRepository(db),
+		airportRepo:       airport.NewRepository(db),
 
 		auth0Client: auth0.New(http, cfg.Auth0, cache, logger),
 

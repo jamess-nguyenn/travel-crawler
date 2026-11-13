@@ -6,7 +6,8 @@ import (
 	"travel-crawler/internal/config"
 	"travel-crawler/internal/constant"
 	"travel-crawler/internal/httpclient"
-	"travel-crawler/internal/integration/accommodation/nuitee"
+	"travel-crawler/internal/integration/nuitee"
+	accomnuitee "travel-crawler/internal/integration/nuitee/accommodation"
 	"travel-crawler/internal/redis"
 
 	"go.uber.org/zap"
@@ -36,22 +37,24 @@ func NewFactory(
 func (f *Factory) Create(code string) (accommodation.Provider, error) {
 	switch code {
 	case constant.ProviderCodeNuitee:
-		client := nuitee.NewClient(
+		api := nuitee.NewClient(
 			f.http,
 			f.config.Nuitee,
 			f.cache,
 			f.logger,
 		)
 
+		client := accomnuitee.NewClient(api)
+
 		limiter, err := nuitee.NewRedisRequestLimiter(
 			f.cache,
-			f.config.Nuitee.RequestInterval,
+			f.config.Nuitee.RequestPerSecond,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("initialize %q rate limiter: %w", code, err)
 		}
 
-		return nuitee.New(client, limiter), nil
+		return accomnuitee.New(client, nuitee.NewRequestGuard(limiter)), nil
 
 	default:
 		return nil, fmt.Errorf("unsupported accommodation provider %q", code)
